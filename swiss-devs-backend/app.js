@@ -9,6 +9,13 @@ var usersRouter = require('./routes/users');
 
 var app = express();
 
+// MongoDB
+const MongoClient = require('mongodb').MongoClient
+
+MongoClient.connect('mongodb://<dbuser>:<dbpassword>@ds115353.mlab.com:15353/swiss-devs', (err, database) => {
+  // ... start the server
+})
+
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'pug');
