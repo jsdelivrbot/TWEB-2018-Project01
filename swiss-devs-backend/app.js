@@ -9,11 +9,15 @@ var usersRouter = require('./routes/users');
 
 var app = express();
 
+// Load dotenv
+require('dotenv').config()
+
 // MongoDB
 const MongoClient = require('mongodb').MongoClient
 
-MongoClient.connect('mongodb://<dbuser>:<dbpassword>@ds115353.mlab.com:15353/swiss-devs', (err, database) => {
+MongoClient.connect("mongodb://" + process.env.MONGO_USER + ':' + process.env.MONGO_PASS +  "@ds115353.mlab.com:15353/swiss-devs", { useNewUrlParser: true }, (err, database) => {
   // ... start the server
+  console.log("mongodb://" + process.env.MONGO_USER + ':' + process.env.MONGO_PASS +  "@ds115353.mlab.com:15353/swiss-devs");
 })
 
 // view engine setup
