@@ -70,7 +70,7 @@ Highcharts.mapChart('chart-switzerland', {
         name: 'Github users',
         states: {
             hover: {
-                color: '#f44336'
+                color: '#da291c'
             }
         },
         dataLabels: {
