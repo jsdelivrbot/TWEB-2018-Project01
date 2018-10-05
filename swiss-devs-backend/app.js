@@ -1,52 +1,64 @@
-var createError = require('http-errors');
-var express = require('express');
-var path = require('path');
-var cookieParser = require('cookie-parser');
-var logger = require('morgan');
-
-var indexRouter = require('./routes/index');
-var usersRouter = require('./routes/users');
-
-var app = express();
+const express = require('express');
+const cors = require('cors');
+const Github = require('./src/Github');
 
 // Load dotenv
 require('dotenv').config()
 
+const app = express();
+const port = process.env.PORT || 3000;
+
 // MongoDB
 const MongoClient = require('mongodb').MongoClient
+const MongoURL = "mongodb://" + process.env.MONGO_USER + ':' + process.env.MONGO_PASS +  "@ds115353.mlab.com:15353/" + process.env.MONGO_DB;
+const DataModel = require('./src/Github')
 
-MongoClient.connect("mongodb://" + process.env.MONGO_USER + ':' + process.env.MONGO_PASS +  "@ds115353.mlab.com:15353/swiss-devs", { useNewUrlParser: true }, (err, database) => {
+var db;
+MongoClient.connect(MongoURL, { useNewUrlParser: true }, (err, mongoClient) => {
   // ... start the server
-  console.log("mongodb://" + process.env.MONGO_USER + ':' + process.env.MONGO_PASS +  "@ds115353.mlab.com:15353/swiss-devs");
+  if (err) return console.log(err)
+  db = mongoClient.db('star-wars-quotes') // whatever your database name is
+
+  console.log("Connected to the MongoDB database ...");
+  db.collection('users').find();
+  const client = new Github({ token: process.env.GITHUB_TOKEN, db });
+
+  // Enable CORS for the client app
+  app.use(cors());
+
+  /**
+   * - getUsers() : Return all Switzerlands developers
+   * - getUsers(var canton) : Return all Switzerlands developers from one specific canton
+   */
+  app.get('/users/:canton', (req, res, next) => { // eslint-disable-line no-unused-vars
+    client.user(req.params.canton)
+      .then(user => res.send(user))
+      .catch(next);
+  });
+
+  app.listen(port, () => {
+    // eslint-disable-next-line no-console
+    console.log(`Server listening at http://localhost:${port}`);
+  });
+
+
+  // Feeding the databases
+  app.get('/feed/', (req, res, next) => { // eslint-disable-line no-unused-vars
+    client.fetchUsers("Vaud")
+    .then(function(data) {
+      console.log(data.total_count);
+      res.send("Total count: " + data.total_count);
+    })
+    .catch(next);
+  });
+
 })
 
-// view engine setup
-app.set('views', path.join(__dirname, 'views'));
-app.set('view engine', 'pug');
-
-app.use(logger('dev'));
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
-app.use(cookieParser());
-app.use(express.static(path.join(__dirname, 'public')));
-
-app.use('/', indexRouter);
-app.use('/users', usersRouter);
-
-// catch 404 and forward to error handler
-app.use(function(req, res, next) {
-  next(createError(404));
-});
-
-// error handler
-app.use(function(err, req, res, next) {
-  // set locals, only providing error in development
-  res.locals.message = err.message;
-  res.locals.error = req.app.get('env') === 'development' ? err : {};
-
-  // render the error page
+// Error handler
+app.use((err, req, res, next) => { // eslint-disable-line no-unused-vars
+  console.error(err);
   res.status(err.status || 500);
-  res.render('error');
+  res.send(err.message);
 });
 
-module.exports = app;
+
