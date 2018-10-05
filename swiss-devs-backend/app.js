@@ -51,7 +51,6 @@ MongoClient.connect(MongoURL, { useNewUrlParser: true }, (err, mongoClient) => {
     })
     .catch(next);
   });
-
 })
 
 // Error handler
