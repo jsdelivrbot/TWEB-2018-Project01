@@ -1,57 +1,59 @@
 const express = require('express');
 const cors = require('cors');
-const Github = require('./src/Github');
+const cron = require('node-cron');
+const Feeder = require('./src/controllers/feeder');
+const User = require('./src/model/user');
 
 // Load dotenv
 require('dotenv').config()
 
+// Setup express
 const app = express();
 const port = process.env.PORT || 3000;
 
-// MongoDB
-const MongoClient = require('mongodb').MongoClient
-const MongoURL = "mongodb://" + process.env.MONGO_USER + ':' + process.env.MONGO_PASS +  "@ds115353.mlab.com:15353/" + process.env.MONGO_DB;
-const DataModel = require('./src/Github')
+// Set up mongoose connection
+var mongoose = require('mongoose');
+var dev_db_url = "mongodb://" + process.env.MONGO_USER + ':' + process.env.MONGO_PASS +  "@ds115353.mlab.com:15353/" + process.env.MONGO_DB;
+var mongoDB = process.env.MONGODB_URI || dev_db_url;
+mongoose.connect(mongoDB, { useNewUrlParser: true } );
+mongoose.Promise = global.Promise;
+var db = mongoose.connection;
+db.on('error', console.error.bind(console, 'MongoDB connection error:'));
+console.log("MongoDB: OK");
 
-var db;
-MongoClient.connect(MongoURL, { useNewUrlParser: true }, (err, mongoClient) => {
-  // ... start the server
-  if (err) return console.log(err)
-  db = mongoClient.db('star-wars-quotes') // whatever your database name is
+const ClientFeeder = new Feeder({ token: process.env.GITHUB_TOKEN, db });
 
-  console.log("Connected to the MongoDB database ...");
-  db.collection('users').find();
-  const client = new Github({ token: process.env.GITHUB_TOKEN, db });
-
-  // Enable CORS for the client app
-  app.use(cors());
-
-  /**
-   * - getUsers() : Return all Switzerlands developers
-   * - getUsers(var canton) : Return all Switzerlands developers from one specific canton
-   */
-  app.get('/users/:canton', (req, res, next) => { // eslint-disable-line no-unused-vars
-    client.user(req.params.canton)
-      .then(user => res.send(user))
-      .catch(next);
-  });
-
-  app.listen(port, () => {
-    // eslint-disable-next-line no-console
-    console.log(`Server listening at http://localhost:${port}`);
-  });
+// Enable CORS for the client app
+app.use(cors());
 
 
-  // Feeding the databases
-  app.get('/feed/', (req, res, next) => { // eslint-disable-line no-unused-vars
-    client.fetchUsers("Vaud")
-    .then(function(data) {
-      console.log(data.total_count);
-      res.send("Total count: " + data.total_count);
-    })
+/*var user = new User({
+  username: "toto"
+});
+user.save().then((obj) => console.log("Collection: " + obj + User.find().byUsername("toto").toString()));
+const client = new Feeder({ token: process.env.GITHUB_TOKEN, db });*/
+
+
+/**
+ * - getUsers() : Return all Switzerlands developers
+ * - getUsers(var canton) : Return all Switzerlands developers from one specific canton
+ */
+app.get('/users/:canton', (req, res, next) => { // eslint-disable-line no-unused-vars
+  client.user(req.params.canton)
+    .then(user => res.send(user))
     .catch(next);
-  });
-})
+});
+
+app.listen(port, () => {
+  // eslint-disable-next-line no-console
+  console.log(`Server listening at http://localhost:${port}`);
+});
+
+
+// Feeding the databases
+app.get('/feed/', (req, res, next) => { // eslint-disable-line no-unused-vars
+  ClientFeeder.feed();
+});
 
 // Error handler
 app.use((err, req, res, next) => { // eslint-disable-line no-unused-vars
@@ -60,4 +62,7 @@ app.use((err, req, res, next) => { // eslint-disable-line no-unused-vars
   res.send(err.message);
 });
 
+cron.schedule('*/5 * * * *', () => {
+  console.log('running a task every minute');
+});
 
