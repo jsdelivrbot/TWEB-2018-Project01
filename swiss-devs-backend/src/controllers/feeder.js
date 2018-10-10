@@ -17,7 +17,7 @@ class Feeder {
         this.token = token;
         this.baseUrl = baseUrl;
         this.db = db;
-        this.cantons = {'AG':'Aargau', 'AI':'Appenzell Inner Rhoden', 'AR':'Appenzell Outer Rhoden', 'BE':'Berne', 'BL':'Basle-Country', 'BS':'Basle-City', 'FR':'Fribourg', 'GE':'Geneva', 'GL':'Glaris', 'GR':'Grisons', 'JU':'Jura', 'LU':'Lucerne', 'NE':'Neuchatel', 'NW':'Nidwalden', 'OW':'Obwalden', 'SG':'St. Gall', 'SH':'Schaffhausen', 'SO':'Solothurn', 'SZ':'Schwyz', 'TG':'Thurgau', 'TI':'Ticino', 'UR':'Uri', 'VD':'Vaud', 'VS':'Valais', 'ZG':'Zug', 'ZH':'Zurich'};
+        this.cantons = JSON.parse('[{"AG":"Aargau"}, {"AI":"Appenzell Inner Rhoden"}, {"AR":"Appenzell Outer Rhoden"}, {"BE":"Berne"}, {"BL":"Basle-Country"}, {"BS":"Basle-City"}, {"FR":"Fribourg"}, {"GE":"Geneva"}, {"GL":"Glaris"}, {"GR":"Grisons"}, {"JU":"Jura"}, {"LU":"Lucerne"}, {"NE":"Neuchatel"}, {"NW":"Nidwalden"}, {"OW":"Obwalden"}, {"SG":"St. Gall"}, {"SH":"Schaffhausen"}, {"SO":"Solothurn"}, {"SZ":"Schwyz"}, {"TG":"Thurgau"}, {"TI":"Ticino"}, {"UR":"Uri"}, {"VD":"Vaud"}, {"VS":"Valais"}, {"ZG":"Zug"}, {"ZH":"Zuri"}]');
     }
 
     setToken(token) {
@@ -26,7 +26,7 @@ class Feeder {
 
     request(path, opts = {}) {
         const url = `${this.baseUrl}${path}`;
-        console.log(`Fetched ===> ${url}`);
+        //console.log(`Fetched ===> ${url}`);
         const options = {
           ...opts,
           headers: {
@@ -47,6 +47,12 @@ class Feeder {
       }
 
     fetchUsers(location) {
+        // Waiting every requests
+        const sleep = (milliseconds) => {
+          return new Promise(resolve => setTimeout(resolve, milliseconds))
+        }
+        var request_count = 0;
+        var users_login = [];
         this.request(`search/users?q=location:${location}:`).then(
           (obj) => {
             obj.items.forEach(element => {
@@ -55,50 +61,52 @@ class Feeder {
               // Fetch users languages
               // Save user
               //console.log(element);
+              users_login.push(element.login);
               User.findOne({ username: element.login }, (err, doc) => {
-                // doc is a Document
-                if (err) console.log("Une big errrreureee : " + err);
+                request_count++;
+                if (err) console.log("Error occured: " + err);
                 
                 // Users doesn't exists we fetch details and create it
                 if (!doc) {
                   //console.log("User <" + element.login + "> doesn't exists. We create it.");
                   // Fetch user details
                   this.request(`users/${element.login}`).then((user_detail) => {
+                    request_count++;
                     // Fetch user repos in order to get the languages used
                     console.log("Element.login => " + element.login);
-                    this.request(`search/repositories?q=@${element.login}`).then((repos) => {
+                    sleep(5000).then(() => {
+                      this.request(`search/repositories?q=@${element.login}`).then((repos) => {                     
+                        // Get users languages used in repositories
+                        request_count++;
+                        var array_languages = [...new Set(repos.items.map(repo => { return repo.language; }))];
+                        array_languages.splice( array_languages.indexOf(null), 1 );
                         
-                      var array_languages = [...new Set(repos.items.map(repo => { return repo.language; }))];
-                      array_languages.splice( array_languages.indexOf(null), 1 );
-                      /*console.log("Array languages: " + array_languages.toString());
-                      console.log(element);
-                      console.log(user_detail);
-                      next;*/
-                      // Now we can create and store in DB our new user
-                      if (array_languages.length >= 1) {
-                        console.log(element.login + " has many languages: " + array_languages );
-                      }
+                        // Now we can create and store in DB our new user
+                        User.create({
+                          _id: new mongoose.mongo.ObjectId(),
+                          username: user_detail.login,
+                          id_github: user_detail.id,
+                          profile_url: user_detail.url,
+                          name: user_detail.name,
+                          company: user_detail.company,
+                          blog: user_detail.blog,
+                          hireable: user_detail.hireable,
+                          email: user_detail.email,
+                          bio: user_detail.bio,
+                          languages: array_languages,
+                          location: user_detail.location,
+                          canton: location
+                        }, function(error) {
+                            console.log("error during saving the user " + user_detail.login);
+                            console.log(error);
+                        });
 
-                      User.create({
-                        _id: new mongoose.mongo.ObjectId(),
-                        username: user_detail.login,
-                        id_github: user_detail.id,
-                        profile_url: user_detail.url,
-                        name: user_detail.name,
-                        company: user_detail.company,
-                        blog: user_detail.blog,
-                        hireable: user_detail.hireable,
-                        email: user_detail.email,
-                        bio: user_detail.bio,
-                        languages: array_languages
-                      }, function(error) {
-                          console.log("error during saving the user " + user_detail.login);
-                          console.log(error);
-                      });
-                      console.log("User <" + user_detail.login + "> saved in DB. ");
-                    }).catch(function(repo_error) { console.log("Error fetching repos: " + repo_error); });
+                        
+                        console.log("User <" + user_detail.login + "> saved in DB. ");
+                      }).catch(function(repo_error) { console.log("Error fetching repos: " + repo_error); });
+                    });
                     //console.log(user_detail);
-                  }).catch(function(user_detail_error) {  console.log("Error fetching user details: " + user_detail_error); });
+                  }).catch(function(user_detail_error) { console.log("Error fetching user details: " + user_detail_error); });
                   
                 }
               });
@@ -108,6 +116,8 @@ class Feeder {
         ).catch(function(error) {
           console.log(error);
         });
+        console.log("Finished with " + users_login.length);
+        console.log(users_login);
         //console.log(res);
         //return console.log(this.mongoClient.collection().find());
     }
@@ -115,7 +125,7 @@ class Feeder {
     feed() {
       for (var loc in this.cantons) {
         this.fetchUsers(this.cantons[loc]);
-        break;
+        setTimeout(function(){console.log("WAIT")}, 10000);
       }
     }
 

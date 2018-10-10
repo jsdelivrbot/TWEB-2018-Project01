@@ -10,6 +10,8 @@ let UserSchema = new Schema({
     company: String,
     blog: String,
     location: String,
+    canton: String,
+    city: String,
     bio: String,
     hireable: Boolean,
     languages: [Schema.Types.Mixed],
