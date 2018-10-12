@@ -2,6 +2,13 @@
 const fetch = require('node-fetch');
 var mongoose = require('mongoose');
 const User = require('../model/user');
+const Bottleneck = require('bottleneck');
+
+
+const limiter = new Bottleneck({
+  maxConcurrent: 1,
+  minTime: 100
+});
 
 class ResponseError extends Error {
     constructor(res, body) {
@@ -24,30 +31,44 @@ class Feeder {
         this.token = token;
     }
 
-    request(path, opts = {}) {
-        const url = `${this.baseUrl}${path}`;
+    ghRequest(path, opts = {}) {
+        const custom_url = `${this.baseUrl}${path}`;
         //console.log(`Fetched ===> ${url}`);
         const options = {
           ...opts,
+          url: custom_url,
           headers: {
             Accept: 'application/vnd.github.v3+json',
             Authorization: `token ${this.token}`,
+            'User-Agent': 'Swiss devs backend'
           },
         };
     
-        return fetch(url, options)
+        return limiter.schedule(() => fetch(custom_url, options)
           .then(res => res.json()
             .then((data) => {
+              console.log(data);
               if (!res.ok) {
                 throw new ResponseError(res, data);
               }
               return data;
-            }));
+            })));
+        /*return new Promise((resolve, reject) => {
+          return request(options, function(error, response, body) {
+              if (error) {
+                console.log("Error during request: " + error);
+                throw new ResponseError(error, body);
+              } else {
+                //console.log(JSON.stringify(JSON.parse(body),null,2));
+                resolve(JSON.parse(body));
+              }
+          });
+        });*/
     }
 
     fetchUsers(location) {
       var users_login = [];
-        this.request(`search/users?q=location:${location}:`).then(
+        this.ghRequest(`search/users?q=location:${location}:`).then(
           (obj) => {
             obj.items.forEach(element => {
               // Check if users already in DB
@@ -62,10 +83,10 @@ class Feeder {
                 // Users doesn't exists we fetch details and create it
                 if (!doc) {
                   // Fetch user details
-                  this.request(`users/${element.login}`).then((user_detail) => {
+                  this.ghRequest(`users/${element.login}`).then((user_detail) => {
                     // Fetch user repos in order to get the languages used
                     console.log("Element.login => " + element.login);
-                    this.request(`search/repositories?q=@${element.login}`).then((repos) => {                     
+                    this.ghRequest(`search/repositories?q=@${element.login}`).then((repos) => {                     
                       
                       // Get users languages used in repositories
                       var array_languages = [...new Set(repos.items.map(repo => { return repo.language; }))];
@@ -112,9 +133,10 @@ class Feeder {
       for (var loc in this.cantons) {
         const p1 = new Promise((resolve, reject) => {
           this.fetchUsers(this.cantons[loc]);
-          setTimeout(function(){}, 5000);
-          resolve();
+          setTimeout(resolve, 5000);
+          console.log(reject);
         });
+        promises.push(p1);
       }
       Promise.all(promises).then(function() {
         console.log("Finished all locations feeding");
