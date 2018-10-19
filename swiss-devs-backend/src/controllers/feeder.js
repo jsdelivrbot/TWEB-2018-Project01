@@ -7,7 +7,7 @@ const Bottleneck = require('bottleneck');
 
 const limiter = new Bottleneck({
   maxConcurrent: 1,
-  minTime: 100
+  minTime: 1000
 });
 
 class ResponseError extends Error {
@@ -20,11 +20,11 @@ class ResponseError extends Error {
   }
 
 class Feeder {
-    constructor({token, db, baseUrl = 'https://api.github.com/'}) {
+    constructor({token, baseUrl = 'https://api.github.com/'}) {
         this.token = token;
         this.baseUrl = baseUrl;
-        this.db = db;
         this.cantons = {'AG':'Aargau', 'AI':'Appenzell Inner Rhoden', 'AR':'Appenzell Outer Rhoden', 'BE':'Berne', 'BL':'Basle-Country', 'BS':'Basle-City', 'FR':'Fribourg', 'GE':'Geneva', 'GL':'Glaris', 'GR':'Grisons', 'JU':'Jura', 'LU':'Lucerne', 'NE':'Neuchatel', 'NW':'Nidwalden', 'OW':'Obwalden', 'SG':'St. Gall', 'SH':'Schaffhausen', 'SO':'Solothurn', 'SZ':'Schwyz', 'TG':'Thurgau', 'TI':'Ticino', 'UR':'Uri', 'VD':'Vaud', 'VS':'Valais', 'ZG':'Zug', 'ZH':'Zurich'};
+        this.cities = {"Aarau":"AG ","Aarberg":"BE","Aarburg":"AG","Adliswil":"ZH","Aesch (BL)[note 1]":"BL","Affoltern am Albis[note 2]":"ZH","Agno[note 2]":"TI","Aigle":"VD","Allschwil[note 2]":"BL","Altdorf (UR)[note 2]":"UR","Altstätten":"SG","Amriswil":"TG","Appenzell[note 1]":"AI","Arbon":"TG","Arlesheim[note 2]":"BL","Arosa[note 2]":"GR","Arth[note 1]":"SZ","Ascona":"TI","Aubonne":"VD","Avenches":"VD","Baar":"ZG","Baden":"AG","Basel":"BS","Bassersdorf":"ZH","Bellinzona":"TI","Belp":"BE","Bern":"BE","Beromünster":"LU","Biasca":"TI","Biel/Bienne":"BE","Binningen":"BL","Birsfelden":"BL","Bischofszell":"TG","Boudry":"NE","Bourg-Saint-Pierre":"VS","Bremgarten (AG)":"AG","Brig-Glis":"VS","Brugg":"AG","Buchs (SG)":"SG","Bülach":"ZH","Büren a.A.":"BE","Bulle":"FR","Burgdorf":"BE","Bussigny":"VD","Carouge (GE)":"GE","Cham":"ZG","Châtel-Saint-Denis":"FR","Chêne-Bougeries":"GE","Chiasso":"TI","Chur":"GR","Conthey":"VS","Coppet":"VD","Cossonay":"VD","Croglio":"TI","Crissier":"VD","Cudrefin":"VD","Cully":"VD","Davos*":"GR","Delémont":"JU","Diessenhofen":"TG","Dietikon":"ZH","Dübendorf":"ZH","Ebikon":"LU","Échallens":"VD","Ecublens (VD)":"VD","Eglisau":"ZH","Einsiedeln":"SZ","Elgg":"ZH","Emmen":"LU","Erlach":"BE","Estavayer-le-Lac":"FR","Flawil":"SG","Frauenfeld":"TG","Freienbach":"SZ","Fribourg":"FR","Geneva":"GE","Gland":"VD","Glarus":"GL","Glarus Nord*":"GL","Gordola":"TI","Gossau (SG)":"SG","Grandcour":"VD","Grandson":"VD","Greifensee":"ZH","Grenchen":"SO","Grüningen":"ZH","Gruyères":"FR","Herisau":"AR","Hermance":"GE","Hinwil":"ZH","Horgen":"ZH","Horw":"LU","Huttwil":"BE","Ilanz":"GR","Illnau-Effretikon":"ZH","Interlaken":"BE","Ittigen":"BE","Kaiserstuhl (AG)":"AG","Klingnau":"AG","Kloten":"ZH","Köniz[note 2]":"BE","Kreuzlingen":"TG","Kriens":"LU","Küsnacht (ZH)":"ZH","La Chaux-de-Fonds":"NE","La Neuveville":"BE","La Sarraz":"VD","La Tour-de-Peilz":"VD","La Tour-de-Trême":"FR","Lachen (SZ)":"SZ","Lancy":"GE","Langenthal":"BE","Laufen (BL)":"BL","Laufenburg":"AG","Laupen":"BE","Lausanne":"VD","Le Grand-Saconnex":"GE","Le Landeron":"NE","Le Locle":"NE","Lenzburg":"AG","Les Clées":"VD","Leuk":"VS","Lichtensteig":"SG","Liestal":"BL","Locarno":"TI","Losone":"TI","Lugano":"TI","Lutry":"VD","Lucerne":"LU","Lyss":"BE","Männedorf":"ZH","Maienfeld":"GR","Martigny":"VS","Meilen":"ZH","Mellingen":"AG","Mendrisio":"TI","Meyrin":"GE","Möhlin":"AG","Monthey":"VS","Montreux":"VD","Morcote":"TI","Morges":"VD","Moudon":"VD","Moutier":"BE","Münchenbuchsee":"BE","Münchenstein":"BL","Münsingen":"BE","Muri bei Bern":"BE","Murten":"FR","Muttenz":"BL","Neuchâtel":"NE","Neuhausen am Rheinfall":"SH","Neunkirch":"SH","Nidau":"BE","Nyon":"VD","Oberwil (BL)":"BL","Oftringen":"AG","Olten":"SO","Onex":"GE","Opfikon":"ZH","Orbe":"VD","Orsières":"VS","Ostermundigen":"BE","Payerne":"VD","Peseux":"NE","Pfäffikon":"ZH","Plan-les-Ouates":"GE","Porrentruy":"JU","Pratteln":"BL","Prilly":"VD","Pully":"VD","Rapperswil-Jona":"SG","Regensberg":"ZH","Regensdorf":"ZH","Reinach (BL)":"BL","Renens (VD)":"VD","Rheinau":"ZH","Rheineck":"SG","Rheinfelden":"AG","Richterswil":"ZH","Riehen":"BS","Risch":"ZG","Riva San Vitale":"TI","Rolle":"VD","Romainmôtier":"VD","Romanshorn":"TG","Romont (FR)":"FR","Rorschach":"SG","Rue":"FR","Rüti (ZH)":"ZH","Saillon":"VS","Saint-Maurice":"VS","Saint-Prex":"VD","Saint-Ursanne":"JU","Sargans":"SG","Sarnen":"OW","Schaffhausen":"SH","Schlieren":"ZH","Schwyz":"SZ","Sembrancher":"VS","Sempach":"LU","Sierre":"VS","Sion":"VS","Solothurn":"SO","Spiez":"BE","Spreitenbach":"AG","Splügen":"GR","St. Gallen":"SG","St. Moritz":"GR","Stäfa":"ZH","Stans":"NW","Steckborn":"TG","Steffisburg":"BE","Steinhausen":"ZG","Suhr":"AG","Stein am Rhein":"SH","Sursee":"LU","Thalwil":"ZH","Thônex":"GE","Thun":"BE","Thusis":"GR","Unterseen":"BE","Urdorf":"ZH","Uster":"ZH","Uznach":"SG","Uzwil":"SG","Val-de-Travers":"NE","Valangin":"NE","Vernier":"GE","Versoix":"GE","Vevey":"VD","Veyrier":"GE","Villeneuve":"VD","Villars-sur-Glâne":"FR","Visp":"VS","Volketswil":"ZH","Wädenswil":"ZH","Waldenburg":"BL","Walenstadt":"SG","Wallisellen":"ZH","Wangen an der Aare":"BE","Werdenberg":"SG","Weinfelden":"TG","Wettingen":"AG","Wetzikon (ZH)":"ZH","Wiedlisbach":"BE","Wil (SG)":"SG","Willisau":"LU","Winterthur":"ZH","Wohlen (AG)":"AG","Yverdon-les-Bains":"VD","Zermatt":"VS","Zofingen":"AG","Zollikofen":"BE","Zollikon":"ZH","Zug":"ZG","Zürich":"ZH","Bad Zurzach":"AG"};
     }
 
     setToken(token) {
@@ -47,7 +47,7 @@ class Feeder {
         return limiter.schedule(() => fetch(custom_url, options)
           .then(res => res.json()
             .then((data) => {
-              console.log(data);
+              console.log("New request: " + custom_url);
               if (!res.ok) {
                 throw new ResponseError(res, data);
               }
@@ -66,10 +66,12 @@ class Feeder {
         });*/
     }
 
-    fetchUsers(location) {
+    fetchUsers(location, canton = null) {
       var users_login = [];
         this.ghRequest(`search/users?q=location:${location}:`).then(
           (obj) => {
+            console.log("Number of users: " + obj.items.length);
+            console.log(obj.total_items);
             obj.items.forEach(element => {
               // Check if users already in DB
               // Fetch users details
@@ -92,6 +94,14 @@ class Feeder {
                       var array_languages = [...new Set(repos.items.map(repo => { return repo.language; }))];
                       array_languages.splice( array_languages.indexOf(null), 1 );
                       
+                      // When we search cities as Location and not canton
+                      // We use the canton passed in parameter
+                      let _canton = null;
+                      if (canton != null)
+                        _canton = canton;
+                      else
+                        _canton = location;
+
                       // Now we can create and store in DB our new user
                       User.create({
                         _id: new mongoose.mongo.ObjectId(),
@@ -106,7 +116,7 @@ class Feeder {
                         bio: user_detail.bio,
                         languages: array_languages,
                         location: user_detail.location,
-                        canton: location
+                        canton: _canton
                       }, function(error) {
                           console.log("Error during saving the user " + user_detail.login);
                           console.log(error);
@@ -122,8 +132,6 @@ class Feeder {
         ).catch(function(error) {
           console.log(error);
         });
-        console.log("Finished with " + users_login.length);
-        console.log(users_login);
         //console.log(res);
         //return console.log(this.mongoClient.collection().find());
     }
@@ -133,6 +141,14 @@ class Feeder {
       for (var loc in this.cantons) {
         const p1 = new Promise((resolve, reject) => {
           this.fetchUsers(this.cantons[loc]);
+          setTimeout(resolve, 5000);
+          console.log(reject);
+        });
+        promises.push(p1);
+      }
+      for (var city in this.cities) {
+        const p1 = new Promise((resolve, reject) => {
+          this.fetchUsers(city, this.cites[city]);
           setTimeout(resolve, 5000);
           console.log(reject);
         });

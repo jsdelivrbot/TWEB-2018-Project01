@@ -1,28 +1,28 @@
-var User = require('../models/user');
+var User = require('../model/user');
 
 //Simple version, without validation or sanitation
 exports.test = function (req, res) {
     res.send('Greetings from the Test controller!');
 };
 
-exports.user_create = function (req, res) {
-    var user = new User(
-        {
-            name: req.body.name,
-            price: req.body.price
-        }
-    );
 
-    user.save(function (err) {
-        if (err) {
-            return next(err);
-        }
-        res.send('User Created successfully')
+
+exports.all = function (req, res) {
+    User.find(req.params.langage, function (err, user) {
+        if (err) return next(err);
+        res.send(user);
     })
 };
 
-exports.users_canton= function (req, res) {
+exports.users_canton = function (req, res) {
     User.findByLocation(req.params.location, function (err, user) {
+        if (err) return next(err);
+        res.send(user);
+    })
+};
+
+exports.users_langage = function (req, res) {
+    User.findByLangage(req.params.langage, function (err, user) {
         if (err) return next(err);
         res.send(user);
     })
