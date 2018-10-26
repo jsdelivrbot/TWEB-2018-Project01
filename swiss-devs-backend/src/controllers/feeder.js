@@ -7,7 +7,7 @@ const Bottleneck = require('bottleneck');
 
 const limiter = new Bottleneck({
   maxConcurrent: 1,
-  minTime: 1000
+  minTime: 2000
 });
 
 class ResponseError extends Error {
@@ -67,11 +67,25 @@ class Feeder {
     }
 
     fetchUsers(location, canton = null) {
-      var users_login = [];
-        this.ghRequest(`search/users?q=location:${location}:`).then(
+      this.ghRequest(`search/users?q=location:${location}:&per_page=${1}`).then(
+        (obj) => {
+          return obj.total_count;
+        }
+      ).catch(function(error) {
+        console.log(error);
+      }).then((total_count) => {
+        console.log(total_count);
+        var nbrProcessed = 0;
+        var pageNbr;
+        var perPages = 100;
+        var users_login = [];
+        for(pageNbr = 1; pageNbr <= Math.min(Math.ceil(total_count/perPages), 1000 / perPages); pageNbr++) {
+        this.ghRequest(`search/users?q=location:${location}:&per_page=${perPages}&page=${pageNbr}`).then(
           (obj) => {
-            console.log("Number of users: " + obj.items.length);
-            console.log(obj.total_items);
+            console.log("Number of users: " + obj.total_count);
+            nbrProcessed += obj.items.length;
+            console.log("Processed: " + nbrProcessed);
+
             obj.items.forEach(element => {
               // Check if users already in DB
               // Fetch users details
@@ -134,6 +148,8 @@ class Feeder {
         });
         //console.log(res);
         //return console.log(this.mongoClient.collection().find());
+        }
+      });
     }
 
     feed() {
@@ -148,7 +164,7 @@ class Feeder {
       }
       for (var city in this.cities) {
         const p1 = new Promise((resolve, reject) => {
-          this.fetchUsers(city, this.cites[city]);
+          this.fetchUsers(city, this.cities[city]);
           setTimeout(resolve, 5000);
           console.log(reject);
         });
