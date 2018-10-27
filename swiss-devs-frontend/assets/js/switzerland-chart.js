@@ -1,12 +1,57 @@
+// Initialize the Switzerland MAP with the count numbers
+function initMap() {
+    let API_ROOT = "http://localhost:3000";
+    let ENDPOINT_USERS_COUNT_PER_CANTON = "/users/canton/Vaud/count";
+
+    $.get( API_ROOT + ENDPOINT_USERS_COUNT_PER_CANTON, function( data ) {
+        console.log(data);
+    });
+}
+
+// Load users informations concerned by the specified canton and langage on the table.
+function loadUsers() {
+
+}
+
+
 // Prepare demo data
 // Data is joined to map using value of 'hc-key' property by default.
 // See API docs for 'joinBy' for more info on linking data and map.
+/*
+For a better understanding of Highcharts code
+"ch-ag": "Aargau"
+"ch-ai": "Appenzell Inner Rhoden"
+"ch-ar": "Appenzell Outer Rhoden"
+"ch-be": "Berne"
+"ch-bs": "Basle-Country"
+"ch-3306": "Basle-City"
+"ch-fr": "Fribourg"
+"ch-ge": "Geneva"
+"ch-gl": "Glaris"
+"ch-gr": "Grisons"
+"ch-ju": "Jura'"
+"ch-lu": "ucerne"
+"ch-ne": "Neuchatel"
+"ch-nw": "Nidwalden"
+"ch-7": "Obwalden"
+"ch-sg": "St. Gall"
+"ch-sh": "Schaffhausen"
+"ch-so": "Solothurn"
+"ch-sz": "Schwyz"
+"ch-tg": "Thurgau"
+"ch-ti": "Ticino"
+"ch-ur": "Uri"
+"ch-vd": "Vaud"
+"ch-vs": "Valais"
+"ch-zg": "Zu"
+"ch-zh": "Zurich"
+*/
 var data = [
     ['ch-fr', 0],
     ['ch-ne', 1],
     ['ch-ag', 2],
     ['ch-lu', 3],
-    ['ch-7', 10],
+    ['ch-7', 10], // Nidwald
     ['ch-vs', 5],
     ['ch-sg', 6],
     ['ch-ar', 7],
@@ -20,7 +65,7 @@ var data = [
     ['ch-zh', 15],
     ['ch-zg', 16],
     ['ch-vd', 17],
-    ['ch-3306', 10],
+    ['ch-3306', 10], // Basel-Landschaft
     ['ch-be', 19],
     ['ch-bs', 20],
     ['ch-so', 21],

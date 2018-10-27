@@ -27,6 +27,25 @@ const ClientFeeder = new Feeder({ token: process.env.GITHUB_TOKEN });
 // Enable CORS for the client app
 app.use(cors());
 
+
+// Get number of users per canton
+function getKeyByValue(object, value) {
+  return Object.keys(object).find(key => object[key] === value);
+}
+
+// Get the users count per canton
+app.get('/users/canton/count', (req, res, next) => { // eslint-disable-line no-unused-vars
+  var charts_keys = { "ch-ag": "Aargau", "ch-ai": "Appenzell Inner Rhoden", "ch-ar": "Appenzell Outer Rhoden", "ch-be": "Berne", "ch-bs": "Basle-Country", "ch-3306": "Basle-City", "ch-fr": "Fribourg", "ch-ge": "Geneva", "ch-gl": "Glaris", "ch-gr": "Grisons", "ch-ju": "Jura'", "ch-lu": "ucerne", "ch-ne": "Neuchatel", "ch-nw": "Nidwalden", "ch-7": "Obwalden", "ch-sg": "St. Gall", "ch-sh": "Schaffhausen", "ch-so": "Solothurn", "ch-sz": "Schwyz", "ch-tg": "Thurgau", "ch-ti": "Ticino", "ch-ur": "Uri", "ch-vd": "Vaud", "ch-vs": "Valais", "ch-zg": "Zug", "ch-zh": "Zurich" };
+  var count_per_canton = { "ch-ag": 0, "ch-ai": 0, "ch-ar": 0, "ch-be": 0, "ch-bs": 0, "ch-3306": 0, "ch-fr": 0, "ch-ge": 0, "ch-gl": 0, "ch-gr": 0, "ch-ju": 0, "ch-lu": 0, "ch-ne": 0, "ch-nw": 0, "ch-7": 0, "ch-sg": 0, "ch-sh": 0, "ch-so": 0, "ch-sz": 0, "ch-tg": 0, "ch-ti": 0, "ch-ur": 0, "ch-vd": 0, "ch-vs": 0, "ch-zg": 0, "ch-zh": 0 };
+
+  UserService.users_count_per_canton_test().then(aggregate => {
+    for (var idx in aggregate) {
+      count_per_canton[getKeyByValue(charts_keys, aggregate[idx]._id)] = aggregate[idx].count;
+    }
+    res.json(count_per_canton);
+  });
+});
+
 // Get users by canton
 app.get('/users/canton/:canton', (req, res, next) => { // eslint-disable-line no-unused-vars
   UserService.users_canton(req.params.canton)
@@ -41,12 +60,7 @@ app.get('/users/canton/:canton/language/:language', (req, res, next) => { // esl
     .catch(next);
 });
 
-// Get number of users per canton
-app.get('/users/canton/:canton/count', (req, res, next) => { // eslint-disable-line no-unused-vars
-  UserService.users_canton_count(req.params.canton)
-    .then(count => res.json( { total_items: count } ))
-    .catch(next);
-});
+
 
 // Get users by languages
 app.get('/users/language/:language', (language, res, next) => { // eslint-disable-line no-unused-vars

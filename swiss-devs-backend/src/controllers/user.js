@@ -14,6 +14,12 @@ exports.all = function (req, res) {
     return User.find({});
 };
 
+exports.users_count_per_canton_test = function () {
+    return User.aggregate([
+        {"$group" : {_id:"$canton", count:{$sum:1}}}
+    ])
+}
+
 exports.users_canton_count = function (canton) {
     return User.count({"canton": { $regex:  canton, $options: 'i'}});
 }
