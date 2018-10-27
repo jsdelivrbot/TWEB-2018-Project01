@@ -5,34 +5,43 @@ exports.test = function (req, res) {
     res.send('Greetings from the Test controller!');
 };
 
-
+/**
+ * In order to have a better User Experience, all requests are done with
+ * case insensitive. Because: VaUd and Vaud should return the same users.
+ */
 
 exports.all = function (req, res) {
-    User.find(req.params.langage, function (err, user) {
-        if (err) return next(err);
-        res.send(user);
-    })
+    return User.find({});
 };
 
-exports.users_canton = function (req, res) {
-    User.findByLocation(req.params.location, function (err, user) {
-        if (err) return next(err);
-        res.send(user);
-    })
+exports.users_count_canton = function (canton) {
+    return User.count({"canton": { $regex:  canton, $options: 'i'}});
+}
+
+exports.users_count_language = function (language) {
+    return User.count({"languages": { $regex:  language, $options: 'i'}});
+}
+
+exports.users_canton = function (canton) {
+    return User.find({"canton": { $regex: canton, $options: 'i'}});
 };
 
-exports.users_langage = function (req, res) {
-    User.findByLangage(req.params.langage, function (err, user) {
-        if (err) return next(err);
-        res.send(user);
-    })
+exports.users_language = function (language) {
+    return User.find({"languages": { $regex:  language, $options: 'i'}});
 };
 
+exports.users_canton_and_language = function (canton, langage) {
+    console.log("Langage: " + canton + " - Canton: " + langage);
+    return User.find({
+        "canton": { $regex: canton, $options: 'i'},
+        "languages": { $regex: langage, $options: 'i'}
+    });
+};
+
+/*
+Not used for the moment.
 exports.user_details = function (req, res) {
-    User.findByIdGithub(req.params.id_github, function (err, user) {
-        if (err) return next(err);
-        res.send(user);
-    })
+    return User.find({ "id_github": req.params.id_github});
 };
 
 exports.user_update = function (req, res) {
@@ -47,4 +56,4 @@ exports.user_delete = function (req, res) {
         if (err) return next(err);
         res.send('Deleted successfully!');
     })
-};
+};*/

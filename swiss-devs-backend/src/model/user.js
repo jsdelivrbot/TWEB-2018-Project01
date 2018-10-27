@@ -14,7 +14,7 @@ let UserSchema = new Schema({
     city: String,
     bio: String,
     hireable: Boolean,
-    languages: [Schema.Types.Mixed],
+    languages: [String],
     created: { 
         type: Date,
         default: Date.now
@@ -23,6 +23,10 @@ let UserSchema = new Schema({
 
 UserSchema.query.byUsername = function(username) {
     return this.where({ username: new RegExp(username, 'i') });
+};
+
+UserSchema.query.byLangage = function(langage) {
+    return this.where({ langages: langage});
 };
 
 // Export the model
