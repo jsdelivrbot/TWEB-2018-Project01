@@ -18,7 +18,8 @@ function initMap() {
         Highcharts.mapChart('chart-switzerland', {
             chart: {
                 map: 'countries/ch/ch-all',
-                backgroundColor: '#EEEEEE'
+                backgroundColor: '#EEEEEE',
+                height: 560,
             },
             plotOptions:{
                 series:{
@@ -76,6 +77,8 @@ function loadUsers(canton) {
     canton = canton.replace('è', 'e');
     canton = canton.replace('â', 'a');
 
+    let languages_canton = [];
+
     console.log("Clicked for " + canton);
     let ENDPOINT_USERS_COUNT_PER_CANTON = "/users/canton/" + canton;
 
@@ -109,7 +112,14 @@ function loadUsers(canton) {
             console.log(user_tr);
             $("#users_content").append(user_tr);
             $("#users_content").append(collapse);
+            user.languages.forEach(lang => {
+                if(languages_canton.indexOf(lang) === -1) {
+                    languages_canton.push(lang);
+                }
+            });
         });
+
+        // Update the selectbox
     });
 
 }
