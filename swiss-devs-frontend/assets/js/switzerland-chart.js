@@ -1,12 +1,13 @@
+let API_ROOT = "http://localhost:3000";
+
 // Initialize the Switzerland MAP with the count numbers stored in DataBase
 function initMap() {
-    let API_ROOT = "http://localhost:3000";
     let ENDPOINT_USERS_COUNT_PER_CANTON = "/users/canton/count";
 
-    var custom_data = [];
+    let custom_data = [];
     $.get( API_ROOT + ENDPOINT_USERS_COUNT_PER_CANTON, function( payload ) {
         // Create the dataset from payload
-        for (var _obj in payload) {
+        for (let _obj in payload) {
             if (_obj == "undefined") {
                 continue;
             }
@@ -25,7 +26,7 @@ function initMap() {
                     point:{
                         events:{
                             click: function(){
-                                console.log(this.name);
+                                loadUsers(this.name);
                             }
                         }
                     }
@@ -68,43 +69,100 @@ function initMap() {
 }
 
 // Load users informations concerned by the specified canton and langage on the table.
-function loadUsers() {
+function loadUsers(canton) {
+    // Handle special cases
+    canton = canton.replace("Genève", "Geneva");
+    canton = canton.replace('ü', 'u');
+    canton = canton.replace('è', 'e');
+    canton = canton.replace('â', 'a');
+
+    console.log("Clicked for " + canton);
+    let ENDPOINT_USERS_COUNT_PER_CANTON = "/users/canton/" + canton;
+
+    let custom_data = [];
+    $("#selected_canton").empty();
+    $("#selected_canton").text(canton);
+    $.get( API_ROOT + ENDPOINT_USERS_COUNT_PER_CANTON, function( payload ) {
+        console.log(payload);
+        $("#users_content").empty();
+        payload.forEach(user => {
+            console.log(user);
+            let user_tr = 
+            "<tr>" +
+                "<td><a target=\"_blank\" href=\"https://github.com/" + user.username + "\">" + user.name + "(" + user.username + ")</a></td>" +
+                "<td>" + user.languages + "</td>" +
+                 '<td class="text-center"><button type="button" class="btn" data-toggle="collapse" data-target="#collapse' + user.id_github + '">Details</button></td>' +
+            "</tr><hr>";
+            let collapse = 
+            '<tr id="collapse' + user.id_github + '" class="collapse in">' +
+                '<td colspan="3">' +
+                    '<ul>' +
+                        '<li><strong>Location: </strong>' + user.location + '</li>' +
+                        '<li><strong>Bio: </strong>' + user.bio + '</li>' +
+                        '<li><strong>Blog: </strong>' + user.blog + '</li>' +
+                        '<li><strong>Company: </strong>' + user.company + '</li>' +
+                        '<li><strong>Hireable: </strong>' + user.hireable + '</li>' +
+                        '<li><strong>Github id: </strong>' + user.id_github + '</li>' +
+                    '</ul>' +
+                '</td>' +
+            '</tr>';
+            console.log(user_tr);
+            $("#users_content").append(user_tr);
+            $("#users_content").append(collapse);
+        });
+    });
 
 }
 
 initMap();
 
 
-// Prepare demo data
-// Data is joined to map using value of 'hc-key' property by default.
-// See API docs for 'joinBy' for more info on linking data and map.
-/*
-For a better understanding of Highcharts code
-"ch-ag": "Aargau"
-"ch-ai": "Appenzell Inner Rhoden"
-"ch-ar": "Appenzell Outer Rhoden"
-"ch-be": "Berne"
-"ch-bs": "Basle-Country"
-"ch-3306": "Basle-City"
-"ch-fr": "Fribourg"
-"ch-ge": "Geneva"
-"ch-gl": "Glaris"
-"ch-gr": "Grisons"
-"ch-ju": "Jura'"
-"ch-lu": "ucerne"
-"ch-ne": "Neuchatel"
-"ch-nw": "Nidwalden"
-"ch-7": "Obwalden"
-"ch-sg": "St. Gall"
-"ch-sh": "Schaffhausen"
-"ch-so": "Solothurn"
-"ch-sz": "Schwyz"
-"ch-tg": "Thurgau"
-"ch-ti": "Ticino"
-"ch-ur": "Uri"
-"ch-vd": "Vaud"
-"ch-vs": "Valais"
-"ch-zg": "Zu"
-"ch-zh": "Zurich"
-*/
+$('#search_language').bind("enterKey",function(e){
+    event.preventDefault();
+    let term = $('#search_language').val();
+    if (term != null && term != "") {
+        let current_canton =  $("#selected_canton").text();
+        if (current_canton == "Nothing" ||  current_canton == "")
+            return;
 
+        let ENDPOINT_USERS_COUNT_PER_CANTON = "/users/canton/" + current_canton  + "/language/" + term;
+
+        $.get( API_ROOT + ENDPOINT_USERS_COUNT_PER_CANTON, function( payload ) {
+            console.log(payload);
+            $("#users_content").empty();
+            payload.forEach(user => {
+                console.log(user);
+                let user_tr = 
+                "<tr>" +
+                    "<td><a target=\"_blank\" href=\"https://github.com/" + user.username + "\">" + user.name + "(" + user.username + ")</a></td>" +
+                    "<td>" + user.languages + "</td>" +
+                    '<td class="text-center"><button type="button" class="btn" data-toggle="collapse" data-target="#collapse' + user.id_github + '">Details</button></td>' +
+                "</tr><hr>";
+                let collapse = 
+                '<tr id="collapse' + user.id_github + '" class="collapse in">' +
+                    '<td colspan="3">' +
+                        '<ul>' +
+                            '<li><strong>Location: </strong>' + user.location + '</li>' +
+                            '<li><strong>Bio: </strong>' + user.bio + '</li>' +
+                            '<li><strong>Blog: </strong>' + user.blog + '</li>' +
+                            '<li><strong>Company: </strong>' + user.company + '</li>' +
+                            '<li><strong>Hireable: </strong>' + user.hireable + '</li>' +
+                            '<li><strong>Github id: </strong>' + user.id_github + '</li>' +
+                        '</ul>' +
+                    '</td>' +
+                '</tr>';
+                console.log(user_tr);
+                $("#users_content").append(user_tr);
+                $("#users_content").append(collapse);
+            });
+        });
+    }
+ });
+
+ $('#search_language').keyup(function(e){
+     if(e.keyCode == 13)
+     {
+         $(this).trigger("enterKey");
+         event.preventDefault();
+     }
+ });
