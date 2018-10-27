@@ -14,7 +14,7 @@ exports.all = function (req, res) {
     return User.find({});
 };
 
-exports.users_count_canton = function (canton) {
+exports.users_canton_count = function (canton) {
     return User.count({"canton": { $regex:  canton, $options: 'i'}});
 }
 

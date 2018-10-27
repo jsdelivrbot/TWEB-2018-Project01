@@ -44,7 +44,7 @@ app.get('/users/canton/:canton/language/:language', (req, res, next) => { // esl
 // Get number of users per canton
 app.get('/users/canton/:canton/count', (req, res, next) => { // eslint-disable-line no-unused-vars
   UserService.users_canton_count(req.params.canton)
-    .then(user => res.send(user))
+    .then(count => res.json( { total_items: count } ))
     .catch(next);
 });
 
