@@ -63,7 +63,7 @@ app.get("/users/canton/:canton/language/:language", (req, res, next) => { // esl
 
 
 // Get users by languages
-app.get("/users/language/:language", (language, res, next) => { // eslint-disable-line no-unused-vars
+app.get("/users/language/:language", (req, res, next) => { // eslint-disable-line no-unused-vars
 	console.log(req.params.language);
 	UserService.users_language(req.params.language)
 		.then(user => res.send(user))
@@ -90,7 +90,7 @@ app.use((err, req, res, next) => { // eslint-disable-line no-unused-vars
 // Schedule the feeder to launch one time per day at 05:00 at morning
 // We made this choice because we don't want to have a high load of requests and processing
 // during the users visits.
-cron.schedule("*/30 * * * *", () => {
+cron.schedule("* */5 * * *", () => {
 	ClientFeeder.feed();
 });
 

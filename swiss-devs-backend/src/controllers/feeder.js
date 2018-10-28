@@ -154,22 +154,22 @@ class Feeder {
 
     feed() {
       var promises = [];
-      for (var loc in this.cantons) {
+      /*for (var loc in this.cantons) {
         const p1 = new Promise((resolve, reject) => {
           this.fetchUsers(this.cantons[loc]);
           setTimeout(resolve, 5000);
           console.log(reject);
         });
         promises.push(p1);
-      }
-      /*for (var city in this.cities) {
+      }*/
+      for (var city in this.cities) {
         const p1 = new Promise((resolve, reject) => {
           this.fetchUsers(city, this.cities[city]);
           setTimeout(resolve, 5000);
           console.log(reject);
         });
         promises.push(p1);
-      }*/
+      }
       Promise.all(promises).then(function() {
         console.log("Finished all locations feeding");
       })

@@ -15,6 +15,7 @@ let UserSchema = new Schema({
 	bio: String,
 	hireable: Boolean,
 	languages: [String],
+	email: String,
 	created: { 
 		type: Date,
 		default: Date.now
