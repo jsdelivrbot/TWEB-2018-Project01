@@ -1,6 +1,6 @@
-# Swiss Devs Analytics
+# Swiss Devs Analytics (https://mraheigvd.github.io/TWEB-2018-Project01/swiss-devs-frontend/index.html)
 
-With Swiss Devs Analytics you should be able to find all Switzerland developers through an easy and interactive charts. You can:
+With Swiss Devs Analytics you should be able to find all Switzerland developers through an easy and interactive chart. You can also:
 
 - Find developers by cantons
 - Filter developers by the language used on their repositories
