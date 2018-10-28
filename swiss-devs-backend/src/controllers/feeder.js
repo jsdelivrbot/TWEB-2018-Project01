@@ -156,7 +156,6 @@ class Feeder {
 		});
 	}
 
-<<<<<<< HEAD
     feed() {
       var promises = [];
       /*for (var loc in this.cantons) {
@@ -168,38 +167,17 @@ class Feeder {
         promises.push(p1);
       }*/
       for (var city in this.cities) {
-=======
-	feed() {
-		var promises = [];
-		for (var loc in this.cantons) {
-			const p1 = new Promise((resolve, reject) => {
-				this.fetchUsers(this.cantons[loc]);
-				setTimeout(resolve, 5000);
-				console.log(reject);
-			});
-			promises.push(p1);
-		}
-		/*for (var city in this.cities) {
->>>>>>> 5719969f208253c888e783e6e22c257d245b5964
         const p1 = new Promise((resolve, reject) => {
           this.fetchUsers(city, this.cities[city]);
           setTimeout(resolve, 5000);
           console.log(reject);
         });
         promises.push(p1);
-<<<<<<< HEAD
       }
       Promise.all(promises).then(function() {
         console.log("Finished all locations feeding");
       })
     }
-=======
-      }*/
-		Promise.all(promises).then(function() {
-			console.log("Finished all locations feeding");
-		});
-	}
->>>>>>> 5719969f208253c888e783e6e22c257d245b5964
 
 }
 
