@@ -1,4 +1,4 @@
-let API_ROOT = "http://localhost:3000";
+let API_ROOT = "https://swiss-devs.herokuapp.com";
 
 // Initialize the Switzerland MAP with the count numbers stored in DataBase
 function initMap() {
