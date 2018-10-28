@@ -10,7 +10,7 @@ With Swiss Devs Analytics you should be able to find all Switzerland developers 
 
 Here is the global architecture of our projet:
 
-![Architecture](https://github.com/mraheigvd/TWEB-2018-Project01/archi.png)
+![Architecture](https://github.com/mraheigvd/TWEB-2018-Project01/blob/master/archi.png)
 
 
 The project is divided in two main part:
