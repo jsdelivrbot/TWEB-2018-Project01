@@ -33,7 +33,6 @@ class Feeder {
 
 	ghRequest(path, opts = {}) {
 		const custom_url = `${this.baseUrl}${path}`;
-		//console.log(`Fetched ===> ${url}`);
 		const options = {
 			...opts,
 			url: custom_url,
@@ -57,17 +56,6 @@ class Feeder {
 				})).catch(function(error) {
 				console.log(error);
 			}));
-		/*return new Promise((resolve, reject) => {
-          return request(options, function(error, response, body) {
-              if (error) {
-                console.log("Error during request: " + error);
-                throw new ResponseError(error, body);
-              } else {
-                //console.log(JSON.stringify(JSON.parse(body),null,2));
-                resolve(JSON.parse(body));
-              }
-          });
-        });*/
 	}
 
 	fetchUsers(location, canton = null) {
@@ -150,22 +138,20 @@ class Feeder {
 				).catch(function(error) {
 					console.log(error);
 				});
-				//console.log(res);
-				//return console.log(this.mongoClient.collection().find());
 			}
 		});
 	}
 
     feed() {
       var promises = [];
-      /*for (var loc in this.cantons) {
+      for (var loc in this.cantons) {
         const p1 = new Promise((resolve, reject) => {
           this.fetchUsers(this.cantons[loc]);
           setTimeout(resolve, 5000);
           console.log(reject);
         });
         promises.push(p1);
-      }*/
+      }
       for (var city in this.cities) {
         const p1 = new Promise((resolve, reject) => {
           this.fetchUsers(city, this.cities[city]);
