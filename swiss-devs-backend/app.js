@@ -94,3 +94,4 @@ cron.schedule("* */5 * * *", () => {
 	ClientFeeder.feed();
 });
 
+module.exports = app; // for testing

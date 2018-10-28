@@ -33,7 +33,7 @@ var default_user = new User({
 });
 
 // Tests the interaction with databases for basics functions
-describe('Users', function() {
+describe('DatabaseUsers', function() {
     this.timeout(50000);
 
     // Create data before tests
